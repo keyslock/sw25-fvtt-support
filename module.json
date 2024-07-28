@@ -1,0 +1,58 @@
+{
+  "id": "sw25-fvtt-support",
+  "title": "Sword World 2.5 Support Tools",
+  "description": "This is a support tool for playing Sword World 2.5 with FVTT.",
+  "authors": [
+    {
+      "name": "Key"
+    }
+  ],
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "11",
+    "maximum": "12"
+  },
+  "styles": [
+    "css/styles.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    },
+    {
+      "lang": "ja",
+      "name": "日本語",
+      "path": "lang/ja.json",
+      "flags": {}
+    }
+  ],
+  "packs": [
+    {
+      "name": "macros",
+      "label": "SW2.5 Macros",
+      "path": "packs/macros",
+      "type": "Macro",
+      "system": "sw25",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "sw25",
+        "type": "system",
+        "compatibility": {}
+      }
+    ]
+  },
+  "manifest": "https://github.com/keyslock/sw25-fvtt-support/releases/latest/download/module.json",
+  "download": "https://github.com/keyslock/sw25-fvtt-support/releases/latest/download/module.zip",
+  "url": "https://github.com/keyslock/sw25-fvtt-support"
+}

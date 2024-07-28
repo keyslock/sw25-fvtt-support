@@ -1,0 +1,51 @@
+{
+  "SW25": {
+    "ST": {
+      "Check": {
+        "Targetval": "目標値",
+        "Preemptive": "先制判定",
+        "MonsterKnowledge": "魔物知識判定"
+      },
+      "Macro": {
+        "General": {
+          "selectTarget": "対象の選択",
+          "selectTemplate": "テンプレートの選択",
+          "inputVal": "増減値を入力",
+          "plusminus": "増減値",
+          "confirm": "決定",
+          "cancel": "やめる",
+          "selectAction": "操作選択",
+          "target": "ターゲット",
+          "select": "選択",
+          "template": "テンプレート",
+          "rollResult": "ロール結果"
+        },
+        "recover": {
+          "exec": "HP/MPを回復します。",
+          "warn": "対象が選択されていません。対象を全て選択して実行してください。"
+        },
+        "preemptive": {
+          "warn": "目標値が取得できません。対象の魔物を全選択して実行してください。"
+        },
+        "mknow": {
+          "warn": "魔物が選択されていません。対象の魔物を全選択して実行してください。"
+        },
+        "looting": {
+          "warn": "魔物が選択されていません。対象の魔物を全ターゲットして実行してください。"
+        },
+        "selfSelect": {
+          "title": "キャラクター周囲の選択",
+          "distance": "距離",
+          "includeSelf": "自身を含む",
+          "info": "キャラクターが選択されました。",
+          "warn": "自分のキャラクターが見つかりません。マップ上に配置されていることを確認してください。"
+        },
+        "templateSelect": {
+          "title": "テンプレート範囲内選択",
+          "info": "キャラクターが選択されました。",
+          "warn": "選択したテンプレートがみつかりません。テンプレートが存在しているか確認してください。"
+        }
+      }
+    }
+  }
+}

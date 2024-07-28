@@ -1,0 +1,51 @@
+{
+  "SW25": {
+    "ST": {
+      "Check": {
+        "Targetval": "Check Value",
+        "Preemptive": "Preemptive Check",
+        "MonsterKnowledge": "Monster Knowledge Check"
+      },
+      "Macro": {
+        "General": {
+          "selectTarget": "Select Option",
+          "selectTemplate": "Select Template",
+          "inputVal": "Input addition value",
+          "plusminus": "addition value",
+          "confirm": "confirm",
+          "cancel": "cancel",
+          "selectAction": "Select Action",
+          "target": "Target",
+          "select": "Select",
+          "template": "Template",
+          "rollResult": "roll result"
+        },
+        "recover": {
+          "exec": "Recovers HP/MP",
+          "warn": "The target has not been selected. Please select all targets and execute."
+        },
+        "preemptive": {
+          "warn": "Unable to obtain target value. Please select all target monsters and execute."
+        },
+        "mknow": {
+          "warn": "No monsters are selected. Please select all target monsters and execute."
+        },
+        "looting": {
+          "warn": "No monsters are selected. Please execute this by targeting all the target monsters."
+        },
+        "selfSelect": {
+          "title": "Selection around character",
+          "distance": "Distance",
+          "includeSelf": "include self",
+          "info": " charactors selected.",
+          "warn": "Your charactor is not found. Make sure it is placed on the map."
+        },
+        "templateSelect": {
+          "title": "Select within template range",
+          "info": " charactors selected.",
+          "warn": "The selected template was not found. Please check if the template exists."
+        }
+      }
+    }
+  }
+}
