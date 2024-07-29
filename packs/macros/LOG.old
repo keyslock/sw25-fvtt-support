@@ -1,3 +1,5 @@
-2024/07/29-03:09:34.038 7d64 Recovering log #26
-2024/07/29-03:09:34.041 7d64 Delete type=0 #26
-2024/07/29-03:09:34.041 7d64 Delete type=3 #24
+2024/07/29-07:43:08.984 8fbc Recovering log #30
+2024/07/29-07:43:08.985 8fbc Level-0 table #32: started
+2024/07/29-07:43:08.988 8fbc Level-0 table #32: 95024 bytes OK
+2024/07/29-07:43:08.992 8fbc Delete type=0 #30
+2024/07/29-07:43:08.992 8fbc Delete type=3 #29
