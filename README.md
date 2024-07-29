@@ -11,7 +11,7 @@ FVTTのシステム[ソード・ワールド2.5](https://github.com/jeannjeann/s
 
 ## インストール
 FVTTの「モジュールを入手」メニューを開き、「URLを指定」にて以下のURLを入力し、インストールしてください。
-https://github.com/keyslock/sw25-fvtt-support/releases/download/latest/module.json
+https://github.com/keyslock/sw25-fvtt-support/releases/latest/download/module.json
 
 ## 使い方
 ワールドの作成後、「モジュールの管理」に「Sword World 2.5 Support Tools」が追加されるため、モジュールを追加してご利用ください。
