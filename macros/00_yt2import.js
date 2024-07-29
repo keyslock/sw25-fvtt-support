@@ -885,9 +885,11 @@ async function yt2import() {
         let metafinalsong = false;
         for (let i in data) {
           if (i.startsWith("combatFeats")) {
-            combatfeats = data[i].split(",");
-            for (const val of combatfeats) {
-              combatability.push(val);
+            if (!i.startsWith("combatFeatsExc")) {
+              combatfeats = data[i].split(",");
+              for (const val of combatfeats) {
+                combatability.push(val);
+              }
             }
           }
         }
