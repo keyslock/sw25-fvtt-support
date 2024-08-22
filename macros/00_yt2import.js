@@ -1,5 +1,28 @@
+// キャラクターシートインポートマクロ
+let alignment = "";
+let defaultImage = "";
+let defaultPortrait = "";
+let folder = "";
+const dafaultIcon = "icons/svg/mystery-man.svg";
+
 // ゆとシートIIインポートマクロ
 async function yt2import() {
+  const folders = new Map();
+
+  folders.set("-", "－");
+  // すべてのフォルダを取得
+  for (const folder of game.folders.values()) {
+    if (folder.type === 'Actor') { // キャラクターフォルダのみ対象
+      folders.set(folder._id, folder.name);
+    }
+  }
+
+  // フォルダをドロップダウンリストに追加
+  let folderOptions = '';
+  for (const folder of folders) {
+    folderOptions += `<option value="${folder[0]}">${folder[1]}</option>`;
+  }
+
   // ダイアログ
   let abilist = false;
   let abidesc = false;
@@ -10,13 +33,38 @@ async function yt2import() {
     let dialogContent = `
       <p>JSONファイル(ゆとシートII出力)を選択してください:</p>
       <p><input type="file" id="json-file-input" accept=".json" style="width: 100%;" /></p>
-      <p></p>
+      <div class="form-group">
+        <label for="folderSelect">格納フォルダ</label>
+        <select id="folderSelect" name="folderId" class="form-control">
+          ${folderOptions}
+        </select>
+      </div>
+      <hr>
+          <div class="form-group">
+              <label for="alignment" style="width: 100px; display: inline-block">関係性:</label>
+              <select id="alignment" name="alignment">
+                  <option value="-1">敵対</option>
+                  <option value="0">中立</option>
+                  <option value="1" selected>友好</option>
+              </select>
+          </div>
+      <hr>
+          <div class="form-group">
+              <label for="defaultPortrait" style="width: 100px; display: inline-block">コマ絵:</label>
+              <input type="text" id="defaultPortrait" name="defaultPortrait" placeholder="ファイルを選択（任意）" style="width: 200px" />
+          </div>
+          <div class="form-group">
+              <label for="defaultImage" style="width: 100px; display: inline-block">立ち絵:</label>
+              <input type="text" id="defaultImage" name="defaultImage" placeholder="ファイルを選択（任意）" style="width: 200px" />
+          </div>
+      <hr>
       <p><b>魔物インポートオプション</b></p>
       <p><input id="abilist" type="checkbox" data-dtype="Boolean" checked/><label for="abilist">魔物能力一覧アイテムを作成</label></p>
-      <p><input id="abidesc" type="checkbox" data-dtype="Boolean"/><label for="abilist">魔物能力一覧を説明タブに展開</label></p>
+      <p><input id="abidesc" type="checkbox" data-dtype="Boolean"/><label for="abidesc">魔物能力一覧を説明タブに展開</label></p>
       <p><input id="monabi" type="checkbox" data-dtype="Boolean"/><label for="monabi">魔物能力の個別アイテムを作成</label></p>
       <p><input id="allattack" type="checkbox" data-dtype="Boolean"/><label for="allattack">多部位魔物：全部位分の攻撃を作成</label></p>
       <p><input id="usefix" type="checkbox" data-dtype="Boolean" checked/><label for="usefix">魔物能力で固定値を使用</label></p>
+      <p><input id="prefix" type="checkbox" data-dtype="Boolean"/><label for="prefix">魔物能力に連番を付与（TAH向け）</label></p>
     `;
 
     new Dialog({
@@ -33,11 +81,17 @@ async function yt2import() {
             monabi = html.find("#monabi")[0].checked;
             allattack = html.find("#allattack")[0].checked;
             usefix = html.find("#usefix")[0].checked;
+            prefix = html.find("#prefix")[0].checked;
+            alignment = html.find('[name="alignment"]').val();
+            defaultImage = html.find('[name="defaultImage"]').val();
+            defaultPortrait = html.find('[name="defaultPortrait"]').val();
+            folder = html.find("#folderSelect")[0].value;
             if (!file) {
               ui.notifications.warn("ファイルが選択されていません。");
               return;
             }
             resolve(file);
+
           },
         },
         cancel: {
@@ -48,9 +102,34 @@ async function yt2import() {
       },
       default: "ok",
       close: () => resolve(null),
+
+      render: (html) => {
+        // テキストボックスがクリックされたときにファイルピッカーを開く
+        html.find('#defaultImage').on('click', () => {
+            new FilePicker({
+                type: "image",
+                callback: (path) => {
+                    html.find('#defaultImage').val(path);
+                }
+            }).browse();
+        });
+
+        html.find('#defaultPortrait').on('click', () => {
+            new FilePicker({
+                type: "image",
+                callback: (path) => {
+                    html.find('#defaultPortrait').val(path);
+                }
+            }).browse();
+        });
+      }
+
     }).render(true);
   });
 
+  folder = folder != "-" ? folder : null;
+  defaultImage = defaultImage ? defaultImage : dafaultIcon;
+  defaultPortrait = defaultPortrait ? defaultPortrait : dafaultIcon;
   // JSON読み込み
   let reader = new FileReader();
   reader.onload = async (event) => {
@@ -808,8 +887,43 @@ async function yt2import() {
                 let setData = duplicate(matchItem);
                 setData.system.equip = true;
                 setData.system.dedicated = dedicated;
+
+                if (data[accown] == "HP") {
+                  setData.effects = [
+                    {
+                      name: "専用装飾品：最大HP+2",
+                      icon: "icons/svg/regen.svg",
+                      disabled: false,
+                      changes: [
+                        {
+                          mode: 2,
+                          value: "2",
+                          key: "system.hp.efhpmod",
+                        },
+                      ],
+                      transfer: true,
+                    },
+                  ];
+                } else if (data[accown] == "MP") {
+                  setData.effects = [
+                    {
+                      name: "専用装飾品：最大MP+2",
+                      icon: "icons/svg/regen.svg",
+                      disabled: false,
+                      changes: [
+                        {
+                          mode: 2,
+                          value: "2",
+                          key: "system.mp.efmpmod",
+                        },
+                      ],
+                      transfer: true,
+                    },
+                  ];
+                }
+                itemData.push(setData);
               } else {
-                setData = {
+                let setData = {
                   name: data[accname],
                   type: "accessory",
                   system: {
@@ -819,41 +933,42 @@ async function yt2import() {
                     accpart: accpart,
                   },
                 };
+                if (data[accown] == "HP") {
+                  setData.effects = [
+                    {
+                      name: "専用装飾品：最大HP+2",
+                      icon: "icons/svg/regen.svg",
+                      disabled: false,
+                      changes: [
+                        {
+                          mode: 2,
+                          value: "2",
+                          key: "system.hp.efhpmod",
+                        },
+                      ],
+                      transfer: true,
+                    },
+                  ];
+                } else if (data[accown] == "MP") {
+                  setData.effects = [
+                    {
+                      name: "専用装飾品：最大MP+2",
+                      icon: "icons/svg/regen.svg",
+                      disabled: false,
+                      changes: [
+                        {
+                          mode: 2,
+                          value: "2",
+                          key: "system.mp.efmpmod",
+                        },
+                      ],
+                      transfer: true,
+                    },
+                  ];
+                }
+                itemData.push(setData);
               }
-              if (data[accown] == "HP") {
-                setData.effects = [
-                  {
-                    name: "専用装飾品：最大HP+2",
-                    icon: "icons/svg/regen.svg",
-                    disabled: false,
-                    changes: [
-                      {
-                        mode: 2,
-                        value: "2",
-                        key: "system.hp.efhpmod",
-                      },
-                    ],
-                    transfer: true,
-                  },
-                ];
-              } else if (data[accown] == "MP") {
-                setData.effects = [
-                  {
-                    name: "専用装飾品：最大MP+2",
-                    icon: "icons/svg/regen.svg",
-                    disabled: false,
-                    changes: [
-                      {
-                        mode: 2,
-                        value: "2",
-                        key: "system.mp.efmpmod",
-                      },
-                    ],
-                    transfer: true,
-                  },
-                ];
-              }
-              itemData.push(setData);
+
             }
           }
         }
@@ -1163,6 +1278,7 @@ async function yt2import() {
         actorData = {
           name: data.characterName,
           type: "character",
+          folder: folder,
           system: {
             abilities: {
               dex: {
@@ -1229,6 +1345,13 @@ async function yt2import() {
             drskill: "ドルイド",
             dmskill: "デーモンルーラー",
           },
+          img: defaultPortrait,
+          prototypeToken: {
+            disposition: alignment,
+            texture: {
+              src: defaultImage
+            },
+          },
         };
 
         createActor(actorData, itemData);
@@ -1252,7 +1375,7 @@ async function yt2import() {
           }
         }
         let biography;
-        let feature = data.skills.replace(/&lt;br&gt;/g, "<br>");
+        let feature = data.skills?.replace(/&lt;br&gt;/g, "<br>");
 
         let actorNum = parseInt(data.statusNum, 10)
           ? parseInt(data.statusNum, 10)
@@ -1272,18 +1395,18 @@ async function yt2import() {
 
         itemData = [
           {
-            name: "抵抗判定",
+            name: zeroPad(prefix,"抵抗判定"),
             type: "monsterability",
             system: {
               description: "",
               usedice1: true,
               label1: "生命",
-              checkbasemod1: eval(vitResist),
+              checkbasemod1: parseValue(vitResist),
               usefix1: usefix,
               applycheck1: false,
               usedice2: true,
               label2: "精神",
-              checkbasemod2: eval(mndResist),
+              checkbasemod2: parseValue(mndResist),
               usefix2: usefix,
               applycheck2: false,
             },
@@ -1296,30 +1419,30 @@ async function yt2import() {
             ? parseInt(data.lv) - parseInt(data.lvMin)
             : 0;
           access = mountLv == 0 ? i : i + "-" + (mountLv + 1);
-          let itemDamage = data["status" + access + "Damage"].replace(
+          let itemDamage = data["status" + access + "Damage"] ? data["status" + access + "Damage"].replace(
             /\b2d6\b|\b2d\b/g,
             ""
-          );
+          ): "";
 
           if (!isNaN(itemDamage)) {
             itemData.push({
-              name: data["status" + i + "Style"],
+              name: zeroPad(prefix, data["status" + i + "Style"]),
               type: "monsterability",
               system: {
                 description: "",
                 usedice1: true,
                 label1: "命中",
-                checkbasemod1: eval(data["status" + access + "Accuracy"]),
+                checkbasemod1: parseValue(data["status" + access + "Accuracy"]),
                 usefix1: usefix,
                 applycheck1: false,
                 usedice2: true,
                 label2: "打撃",
                 checkbasemod2: itemDamage,
                 usefix2: false,
-                applycheck2: true,
+                applycheck2: "on",
                 usedice3: true,
                 label3: "回避",
-                checkbasemod3: eval(data["status" + access + "Evasion"]),
+                checkbasemod3: parseValue(data["status" + access + "Evasion"]),
                 usefix3: usefix,
                 applycheck3: false,
               },
@@ -1328,12 +1451,12 @@ async function yt2import() {
           if (abidesc)
             partsList.push([
               data["status" + i + "Style"],
-              eval(data["status" + access + "Accuracy"]),
+              parseValue(data["status" + access + "Accuracy"]),
               data["status" + access + "Damage"],
-              eval(data["status" + access + "Evasion"]),
-              eval(data["status" + access + "Defense"]),
-              eval(data["status" + access + "Hp"]),
-              eval(data["status" + access + "Mp"]),
+              parseValue(data["status" + access + "Evasion"]),
+              parseValue(data["status" + access + "Defense"]),
+              parseValue(data["status" + access + "Hp"]),
+              parseValue(data["status" + access + "Mp"]),
             ]);
         }
 
@@ -1359,7 +1482,7 @@ async function yt2import() {
 
         for (var i = 1; i <= actorNum; i++) {
           let partsName = data["status" + i + "Style"];
-          partsName = partsName.replace(/.*[\(（]/, "").replace(/[\)）].*/, "");
+          partsName = partsName?.replace(/.*[\(（]/, "").replace(/[\)）].*/, "");
           let actName = actorNum == 1 ? name : name + " (" + partsName + ")";
 
           let mountLv = parseInt(data.lvMin)
@@ -1370,17 +1493,18 @@ async function yt2import() {
           actorData = {
             name: actName,
             type: "monster",
+            folder: folder,
             system: {
               hp: {
-                value: eval(data["status" + access + "Hp"]),
+                value: parseValue(data["status" + access + "Hp"]),
               },
               mp: {
-                value: eval(data["status" + access + "Mp"]),
+                value: parseValue(data["status" + access + "Mp"]),
               },
               monlevel: data.lv,
-              hpbase: eval(data["status" + access + "Hp"]),
-              mpbase: eval(data["status" + access + "Mp"]),
-              ppbase: eval(data["status" + access + "Defense"]),
+              hpbase: parseValue(data["status" + access + "Hp"]),
+              mpbase: parseValue(data["status" + access + "Mp"]),
+              ppbase: parseValue(data["status" + access + "Defense"]),
               type: data.taxa,
               intelligence: data.intellect,
               perception: data.perception,
@@ -1397,6 +1521,13 @@ async function yt2import() {
               corepart: data.coreParts,
               biography: biography,
               loot: loot,
+            },
+            img: defaultPortrait,
+            prototypeToken: {
+              disposition: alignment,
+              texture: {
+                src: defaultImage
+              },
             },
           };
 
@@ -1431,6 +1562,9 @@ function createActor(actorData, itemData) {
   Actor.create(actorData)
     .then((actor) => {
       setTimeout(() => {
+        actor.update({
+          'prototypeToken.disposition': alignment
+        });
         let existingItems = actor.items.map((item) => item.id);
         actor
           .deleteEmbeddedDocuments("Item", existingItems)
@@ -1456,27 +1590,27 @@ function createActor(actorData, itemData) {
 
 // 魔物特殊能力解析
 function analysisFeature(feature, usefix) {
-  const array = feature.split("<br>");
+  const array = feature?.split("<br>");
   var parts = "";
   const patternParts = /^●(.*)$/g;
   const patternMagic =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)+(.*)[/／]魔力([0-9０-９]+).*$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)+(.*)[/／]魔力([0-9０-９]+).*$/g;
   const patternSkill =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)+(.*)[/／]([0-9０-９]+)[0-9０-９\(\)（）]+[/／](.*)$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)+(.*)[/／]([0-9０-９]+)[0-9０-９\(\)（）]+[/／](.*)$/g;
   const patternSplit =
-    /^(●|\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑).*$/g;
+    /^(●|\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑).*$/g;
   const patternConst =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*(\[常\]|○|◯|〇)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*(\[常\]|○|◯|〇)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
   const patternMain =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*(\[主\]|＞|▶|〆)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*(\[主\]|＞|▶|〆)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
   const patternAux =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*(\[補\]|≫|>>|☆)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*(\[補\]|≫|>>|☆)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
   const patternPrep =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*(\[戦\]|△)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*(\[戦\]|△)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
   const patternDecia =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*(\[宣\]|🗨|□|☑)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*(\[宣\]|🗨|□|☑)(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)*.*$/g;
   const patternReplace =
-    /(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑)/g;
+    /(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑)/g;
 
   let ability = [];
 
@@ -1495,158 +1629,159 @@ function analysisFeature(feature, usefix) {
     false,
   ];
   var output = false;
+  if(array){
+    for (const val of array) {
+      var match = "";
 
-  for (const val of array) {
-    var match = "";
+      // 能力区切り
+      match = val.match(patternSplit);
+      if (match != null && output) {
+        ability.push({
+          name: zeroPad(prefix,skill[0]),
+          type: "monsterability",
+          system: {
+            usedice1: skill[5],
+            label1: skill[1],
+            checkbasemod1: skill[2],
+            usefix1: skill[6],
+            applycheck1: false,
+            remark: skill[3],
+            description: skill[4],
+            constant: skill[7],
+            main: skill[8],
+            aux: skill[9],
+            prep: skill[10],
+            decla: skill[11],
+          },
+        });
 
-    // 能力区切り
-    match = val.match(patternSplit);
-    if (match != null && output) {
-      ability.push({
-        name: skill[0],
-        type: "monsterability",
-        system: {
-          usedice1: skill[5],
-          label1: skill[1],
-          checkbasemod1: skill[2],
-          usefix1: skill[6],
-          applycheck1: false,
-          remark: skill[3],
-          description: skill[4],
-          constant: skill[7],
-          main: skill[8],
-          aux: skill[9],
-          prep: skill[10],
-          decla: skill[11],
-        },
-      });
+        skill = [
+          "",
+          "",
+          "",
+          "",
+          "",
+          false,
+          usefix,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ];
+        output = false;
+      }
 
-      skill = [
-        "",
-        "",
-        "",
-        "",
-        "",
-        false,
-        usefix,
-        false,
-        false,
-        false,
-        false,
-        false,
-      ];
-      output = false;
+      // 常時特技
+      match = val.match(patternConst);
+      if (match != null) {
+        skill[0] = match[0].replace(patternReplace, "");
+        skill[7] = true;
+        output = true;
+      }
+
+      // 主動作
+      match = val.match(patternMain);
+      if (match != null) {
+        skill[0] = match[0].replace(patternReplace, "");
+        skill[8] = true;
+        output = true;
+      }
+
+      // 補助動作
+      match = val.match(patternAux);
+      if (match != null) {
+        skill[0] = match[0].replace(patternReplace, "");
+        skill[9] = true;
+        output = true;
+      }
+
+      // 戦闘準備
+      match = val.match(patternPrep);
+      if (match != null) {
+        skill[0] = match[0].replace(patternReplace, "");
+        skill[10] = true;
+        output = true;
+      }
+
+      // 宣言特技
+      match = val.match(patternDecia);
+      if (match != null) {
+        skill[0] = match[0].replace(patternReplace, "");
+        skill[11] = true;
+        output = true;
+      }
+
+      // 部位判定
+      match = val.match(patternParts);
+      if (match != null) {
+        parts = "[" + match[0].replace("●", "") + "]";
+
+        skill = [
+          "",
+          "",
+          "",
+          "",
+          "",
+          false,
+          usefix,
+          false,
+          false,
+          false,
+          false,
+          false,
+        ];
+        continue;
+      }
+
+      // 魔法判定
+      match = val.match(patternMagic);
+      if (match != null) {
+        var split = match[0].split(patternMagic);
+        skill[0] = parts != "" ? parts + split[2] : split[2];
+        skill[1] = "魔力";
+        if (skill[0].includes("真語魔法")) skill[1] = "真語魔力";
+        if (skill[0].includes("操霊魔法")) skill[1] = "操霊魔力";
+        if (skill[0].includes("深智魔法")) skill[1] = "深智魔力";
+        if (skill[0].includes("神聖魔法")) skill[1] = "神聖魔力";
+        if (skill[0].includes("魔動機術")) skill[1] = "魔動機術魔力";
+        if (skill[0].includes("妖精魔法")) skill[1] = "妖精魔力";
+        if (skill[0].includes("森羅魔法")) skill[1] = "森羅魔力";
+        if (skill[0].includes("召異魔法")) skill[1] = "召異魔力";
+        skill[2] = parseInt(toHalfWidth(split[3]), 10);
+        skill[3] = "";
+        skill[4] = match[0];
+        skill[5] = true;
+        skill[6] = usefix;
+        output = true;
+
+        continue;
+      }
+
+      // 特殊能力判定
+      match = val.match(patternSkill);
+      if (match != null) {
+        var split = match[0].split(patternSkill);
+
+        skill[0] = parts != "" ? parts + split[2] : split[2];
+        skill[1] = "判定";
+        skill[2] = parseInt(toHalfWidth(split[3]), 10);
+        skill[3] = split[4];
+        skill[4] = match[0];
+        skill[5] = true;
+        skill[6] = usefix;
+        output = true;
+
+        continue;
+      }
+
+      skill[4] = skill[4] + "<br>" + val;
     }
-
-    // 常時特技
-    match = val.match(patternConst);
-    if (match != null) {
-      skill[0] = match[0].replace(patternReplace, "");
-      skill[7] = true;
-      output = true;
-    }
-
-    // 主動作
-    match = val.match(patternMain);
-    if (match != null) {
-      skill[0] = match[0].replace(patternReplace, "");
-      skill[8] = true;
-      output = true;
-    }
-
-    // 補助動作
-    match = val.match(patternAux);
-    if (match != null) {
-      skill[0] = match[0].replace(patternReplace, "");
-      skill[9] = true;
-      output = true;
-    }
-
-    // 戦闘準備
-    match = val.match(patternPrep);
-    if (match != null) {
-      skill[0] = match[0].replace(patternReplace, "");
-      skill[10] = true;
-      output = true;
-    }
-
-    // 宣言特技
-    match = val.match(patternDecia);
-    if (match != null) {
-      skill[0] = match[0].replace(patternReplace, "");
-      skill[11] = true;
-      output = true;
-    }
-
-    // 部位判定
-    match = val.match(patternParts);
-    if (match != null) {
-      parts = "[" + match[0].replace("●", "") + "]";
-
-      skill = [
-        "",
-        "",
-        "",
-        "",
-        "",
-        false,
-        usefix,
-        false,
-        false,
-        false,
-        false,
-        false,
-      ];
-      continue;
-    }
-
-    // 魔法判定
-    match = val.match(patternMagic);
-    if (match != null) {
-      var split = match[0].split(patternMagic);
-      skill[0] = parts != "" ? parts + split[2] : split[2];
-      skill[1] = "魔力";
-      if (skill[0].includes("真語魔法")) skill[1] = "真語魔力";
-      if (skill[0].includes("操霊魔法")) skill[1] = "操霊魔力";
-      if (skill[0].includes("深智魔法")) skill[1] = "深智魔力";
-      if (skill[0].includes("神聖魔法")) skill[1] = "神聖魔力";
-      if (skill[0].includes("魔動機術")) skill[1] = "魔動機術魔力";
-      if (skill[0].includes("妖精魔法")) skill[1] = "妖精魔力";
-      if (skill[0].includes("森羅魔法")) skill[1] = "森羅魔力";
-      if (skill[0].includes("召異魔法")) skill[1] = "召異魔力";
-      skill[2] = parseInt(toHalfWidth(split[3]), 10);
-      skill[3] = "";
-      skill[4] = match[0];
-      skill[5] = true;
-      skill[6] = true;
-      output = true;
-
-      continue;
-    }
-
-    // 特殊能力判定
-    match = val.match(patternSkill);
-    if (match != null) {
-      var split = match[0].split(patternSkill);
-
-      skill[0] = parts != "" ? parts + split[2] : split[2];
-      skill[1] = "判定";
-      skill[2] = parseInt(toHalfWidth(split[3]), 10);
-      skill[3] = split[4];
-      skill[4] = match[0];
-      skill[5] = true;
-      skill[6] = true;
-      output = true;
-
-      continue;
-    }
-
-    skill[4] = skill[4] + "<br>" + val;
   }
 
   if (output) {
     ability.push({
-      name: skill[0],
+      name: zeroPad(prefix,skill[0]),
       type: "monsterability",
       system: {
         usedice1: skill[5],
@@ -1673,29 +1808,31 @@ function analysisFeature(feature, usefix) {
 // 魔物特殊能力HTML成型
 function convertHtmlFromFeature(feature) {
   var ret = '<section class="box">';
-  const array = feature.split("<br>");
+  const array = feature?.split("<br>");
   var parts = "";
   const patternParts = /^●(.*)$/g;
   const patternSplit =
-    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|>>|☆|\[宣\]|🗨|□|☑).*$/g;
-  for (const val of array) {
-    var match = "";
+    /^(\[常\]|○|◯|〇|\[戦\]|△|\[主\]|＞|▶|〆|\[補\]|≫|&gt;&gt;|>>|☆|\[宣\]|🗨|□|☑).*$/g;
+  if(array){
+    for (const val of array) {
+      var match = "";
 
-    // 部位判定
-    match = val.match(patternParts);
-    if (match != null) {
-      ret = ret + "<h3>" + val + "</h3>";
-      continue;
-    }
+      // 部位判定
+      match = val.match(patternParts);
+      if (match != null) {
+        ret = ret + "<h3>" + val + "</h3>";
+        continue;
+      }
 
-    // 能力区切り
-    match = val.match(patternSplit);
-    if (match != null) {
-      ret = ret + "<h4>" + val + "</h4>";
-      continue;
-    }
-    if (val != "") {
-      ret = ret + val + "<br>";
+      // 能力区切り
+      match = val.match(patternSplit);
+      if (match != null) {
+        ret = ret + "<h4>" + val + "</h4>";
+        continue;
+      }
+      if (val != "") {
+        ret = ret + val + "<br>";
+      }
     }
   }
   ret = ret + "</section>";
@@ -1716,7 +1853,7 @@ function getBiography(feature, description, partsList) {
             <th>ＭＰ
         </thead>
         <tbody>
-   `;
+  `;
   for (const parts of partsList) {
     acc = parts[1] + 7;
     eva = parts[3] + 7;
@@ -1729,12 +1866,12 @@ function getBiography(feature, description, partsList) {
               <td class="pt-item">${parts[4]}
               <td class="pt-item">${parts[5]}
               <td class="pt-item">${parts[6]}
-     `;
+    `;
   }
   biography += `
         </tbody>
       </table>
-   `;
+  `;
 
   biography +=
     convertHtmlFromFeature(feature) +
@@ -1752,11 +1889,84 @@ function toHalfWidth(str) {
   return str;
 }
 
+// 魔物ゼロパディング用
+function zeroPadMonabi() {
+  let count = 0; 
+
+  return function(enable, label) {
+    count += 1; 
+    
+    return enable ? String(count).padStart(2, '0') + `.${label}` : label;
+  };  
+}
+
+function parseValue(input) {
+  // 数式を計算するための関数
+  function evaluateExpression(expression) {
+    try {
+      // 数式を評価して結果を返す
+      return eval(expression);
+    } catch (error) {
+      // 数式が無効な場合は 0 を返す
+      return 0;
+    }
+  }
+
+  // 全角数字を半角数字に変換する関数
+  function convertFullWidthToHalfWidth(str) {
+    return str?.replace(/[０１２３４５６７８９]/g, (match) =>
+      String.fromCharCode(match.charCodeAt(0) - 0xfee0)
+    );
+  }
+
+  // 数式かどうかのチェック（簡易版）
+  function isExpression(str) {
+    return /[+\-*/]/.test(str);
+  }
+
+  // 数値に変換する関数
+  function toNumber(str) {
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  }
+
+  // 数式の場合は計算し、数値に変換する
+  if (isExpression(input)) {
+    return evaluateExpression(input);
+  }
+
+  // 全角数字の場合は半角数字に変換する
+  const convertedInput = convertFullWidthToHalfWidth(input);
+
+  // 半角数字であればそのまま数値に変換
+  return toNumber(convertedInput);
+}
+
+
 // HTMLデコード関数
 function decodeHTML(escapedText) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(escapedText, "text/html");
   return doc.documentElement.textContent;
+}
+
+function deepCopy(obj) {
+  // オブジェクトや配列が null であればそのまま返す
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  // オブジェクトか配列かを確認し、適切な新しいインスタンスを作成
+  let copy = Array.isArray(obj) ? [] : {};
+
+  // オブジェクトのすべてのプロパティを再帰的にコピー
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      copy[key] = deepCopy(obj[key]);
+    }
+  }
+
+  return copy;
 }
 
 // Compendium検索関数
@@ -1775,5 +1985,6 @@ async function findEntryInCompendium(type, entryName) {
   return null;
 }
 
+const zeroPad = zeroPadMonabi();
 // マクロ実行
 yt2import();

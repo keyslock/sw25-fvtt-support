@@ -13,6 +13,7 @@
     "verified": "11",
     "maximum": "12"
   },
+  "scripts": ["scripts/init.js"],
   "styles": [
     "css/styles.css"
   ],

@@ -1,14 +1,14 @@
-2024/07/29-20:54:37.048 1bd0 Recovering log #50
-2024/07/29-20:54:37.052 1bd0 Delete type=0 #50
-2024/07/29-20:54:37.052 1bd0 Delete type=3 #48
-2024/07/29-21:02:49.558 3500 Level-0 table #55: started
-2024/07/29-21:02:49.567 3500 Level-0 table #55: 32212 bytes OK
-2024/07/29-21:02:49.570 3500 Delete type=0 #53
-2024/07/29-21:02:49.576 3500 Manual compaction at level-0 from '!folders!aquU8XwWHogOhL3E' @ 72057594037927935 : 1 .. '!macros!pWPMiONZdx43Q2n1' @ 0 : 0; will stop at '!macros!MCU2I3UMZf0y7LVx' @ 179 : 1
-2024/07/29-21:02:49.576 3500 Compacting 1@0 + 1@1 files
-2024/07/29-21:02:49.584 3500 Generated table #56@0: 9 keys, 25330 bytes
-2024/07/29-21:02:49.584 3500 Compacted 1@0 + 1@1 files => 25330 bytes
-2024/07/29-21:02:49.587 3500 compacted to: files[ 0 1 0 0 0 0 0 ]
-2024/07/29-21:02:49.587 3500 Delete type=2 #39
-2024/07/29-21:02:49.587 3500 Delete type=2 #55
-2024/07/29-21:02:49.587 3500 Manual compaction at level-0 from '!macros!MCU2I3UMZf0y7LVx' @ 179 : 1 .. '!macros!pWPMiONZdx43Q2n1' @ 0 : 0; will stop at (end)
+2024/08/22-18:04:00.462 66b4 Recovering log #428
+2024/08/22-18:04:00.466 66b4 Delete type=0 #428
+2024/08/22-18:04:00.466 66b4 Delete type=3 #426
+2024/08/22-18:17:57.446 5340 Level-0 table #433: started
+2024/08/22-18:17:57.448 5340 Level-0 table #433: 19766 bytes OK
+2024/08/22-18:17:57.451 5340 Delete type=0 #431
+2024/08/22-18:17:57.453 5340 Manual compaction at level-0 from '!folders!aquU8XwWHogOhL3E' @ 72057594037927935 : 1 .. '!macros!pWPMiONZdx43Q2n1' @ 0 : 0; will stop at '!macros!MCU2I3UMZf0y7LVx' @ 184 : 1
+2024/08/22-18:17:57.453 5340 Compacting 1@0 + 1@1 files
+2024/08/22-18:17:57.456 5340 Generated table #434@0: 9 keys, 29102 bytes
+2024/08/22-18:17:57.456 5340 Compacted 1@0 + 1@1 files => 29102 bytes
+2024/08/22-18:17:57.457 5340 compacted to: files[ 0 1 0 0 0 0 0 ]
+2024/08/22-18:17:57.458 5340 Delete type=2 #56
+2024/08/22-18:17:57.458 5340 Delete type=2 #433
+2024/08/22-18:17:57.460 5340 Manual compaction at level-0 from '!macros!MCU2I3UMZf0y7LVx' @ 184 : 1 .. '!macros!pWPMiONZdx43Q2n1' @ 0 : 0; will stop at (end)
